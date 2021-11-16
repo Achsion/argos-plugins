@@ -185,6 +185,10 @@ function spotify-window-toggleMapping() {
 	fi
 }
 
+function spotify-quit() {
+	pkill spotify
+}
+
 
 
 case "${1}" in
@@ -202,6 +206,10 @@ case "${1}" in
 		;;
 	'showhide' )
 		spotify-window-toggleMapping
+		exit 0
+		;;
+	'quit' )
+		spotify-quit
 		exit 0
 		;;
 esac
@@ -263,12 +271,9 @@ echo "Previous | bash='${0}' terminal=false refresh=true param1=previous"
 echo "---"
 
 echo "${OUT_VISIBILITY_CHANGE} | bash='${0}' terminal=false refresh=false param1=showhide"
-#echo "Quit"
-
-# Hide and unhide Windows:
-#xdotool windowunmap id
-#xdotool windowmap id
 
 echo "---"
+
+echo "Quit | bash='${0}' terminal=false refresh=true param1=quit"
 echo "Refresh... | refresh=true"
 
