@@ -88,6 +88,7 @@ function spotify-metadata() {
 	| sed -E 's/^"//'				`# Strip leading quotes`        \
 	| sed -E 's/"$//'				`# ...and trailing quotes.`     \
 	| sed -E 's/"+/|/'				`# Replace "" with a seperator.`\
+	| sed -E 's/"/\\"/g'				`# Escape remaining quotes`	\
 	| sed -E 's/ +/ /g';				`# Merge consecutive spaces.`
 }
 
@@ -255,8 +256,13 @@ case "$(spotify-window-mappedStatus)" in
 		;;
 esac
 
+OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:15}"
+if [[ ${#SPOTIFY_CURRENT_TITLE} -gt 15 ]]
+then
+	OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:14}&#8230;"
+fi
 
-echo "${OUT_HEADER_ICON} ${SPOTIFY_CURRENT_TITLE:0:14} ${OUT_HEADER_ICON} | color=${OUT_HEADER_COLOR}"
+echo "${OUT_HEADER_ICON} ${OUT_TITLE} ${OUT_HEADER_ICON} | color=${OUT_HEADER_COLOR}"
 echo "---"
 
 echo "${SPOTIFY_CURRENT_TITLE} | length=25"
