@@ -5,7 +5,38 @@ SPOTIFY_DEST="org.mpris.MediaPlayer2.spotify"
 SPOTIFY_PATH="/org/mpris/MediaPlayer2"
 SPOTIFY_MEMB="org.mpris.MediaPlayer2.Player"
 
-SPOTIFY_DEFAULT_PLAYLIST_URI="spotify:playlist:17rHXnQuPFbKtRp7wIkZUv"
+WORKING_DIRECTORY="${0%/*}"
+SETTINGS_DIRECTORY="${WORKING_DIRECTORY}/settings"
+SETTINGS_FILE="${SETTINGS_DIRECTORY}/$(basename $0 | sed -E 's/\..*$//')"
+
+# setting variables
+SETTING_PLAYLIST_URI=""
+SETTING_START_WINDOW="show"
+
+
+if [ ! -d "$DIRECTORY" ]
+then
+        mkdir -p "${SETTINGS_DIRECTORY}"
+fi
+if [ ! -f $SETTINGS_FILE ]
+then
+        touch "${SETTINGS_FILE}"
+fi
+
+
+function apply-settings() {
+	# read settings from file
+	#TODO: maybe read setting variables with sed or smth else
+	while read line
+	do
+		eval "${line}"
+	done < "${SETTINGS_FILE}"
+}
+
+#function save-settings() {
+#}
+
+apply-settings
 
 
 # get spotify window id
@@ -15,16 +46,42 @@ function spotify-window-id() {
 	xdotool search --name '^Spotify$'
 }
 
+function spotify-window-minimize() {
+	spotify-window-id | xargs -L1 xdotool windowminimize
+}
+
+function spotify-window-hide() {
+	spotify-window-id | xargs -L1 xdotool windowunmap
+}
+
+function spotify-window-show() {
+	spotify-window-id | xargs -L1 xdotool windowmap
+}
+
 # start spotify with default playlist
 function spotify-start() {
 	if ! ps aux | grep "spotify" | grep -v "grep" | grep -v "argos" &> /dev/null
 	then
 		spotify 1>/dev/null 2>&1 &
-		sleep 3
-		xdotool search --name '^Spotify$' | xargs -L1 xdotool windowminimize
+		sleep 2.5
+
+		case "${SETTING_START_WINDOW}" in
+			'show' )
+				spotify-window-show
+				;;
+			'minimize' )
+				spotify-window-minimize
+				;;
+			'hide' )
+				spotify-window-hide
+				;;
+			* )
+				spotify-window-show
+				;;
+		esac
 	fi
 
-	dbus-send --session --type=method_call --dest=${SPOTIFY_DEST} ${SPOTIFY_PATH} "${SPOTIFY_MEMB}.OpenUri" "string:${SPOTIFY_DEFAULT_PLAYLIST_URI}"
+	dbus-send --session --type=method_call --dest=${SPOTIFY_DEST} ${SPOTIFY_PATH} "${SPOTIFY_MEMB}.OpenUri" "string:${SETTING_PLAYLIST_URI}"
 }
 
 # check if spotify start button has been clicked
@@ -73,7 +130,7 @@ function spotify-start() {
 		xdotool search 'Spotify' | xargs -L1 xdotool windowminimize
 	fi
 
-	dbus-send --session --type=method_call --dest=${SPOTIFY_DEST} ${SPOTIFY_PATH} "${SPOTIFY_MEMB}.OpenUri" "string:${SPOTIFY_DEFAULT_PLAYLIST_URI}"
+	dbus-send --session --type=method_call --dest=${SPOTIFY_DEST} ${SPOTIFY_PATH} "${SPOTIFY_MEMB}.OpenUri" "string:${SETTING_PLAYLIST_URI}"
 }
 
 # prints the currently playing track in a parseable format
@@ -180,9 +237,9 @@ function spotify-window-mappedStatus() {
 function spotify-window-toggleMapping() {
 	if [ $(spotify-window-mappedStatus) == 'IsViewable' ]
 	then
-		spotify-window-id | xargs -L1 xdotool windowunmap
+		spotify-window-hide
 	else
-		spotify-window-id | xargs -L1 xdotool windowmap
+		spotify-window-show
 	fi
 }
 
@@ -219,12 +276,10 @@ esac
 
 eval $(spotify-eval)
 
-#SPOTIFY_PLAYBACK_STATUS=$(spotify-playbackStatus)
 
 OUT_PLAYPAUSE="---"
 OUT_HEADER_ICON=":exclamation:"
 OUT_HEADER_COLOR="#ff0000"
-#case "${SPOTIFY_PLAYBACK_STATUS}" in
 case "$(spotify-playbackStatus)" in
 	'Playing' )
 		OUT_PLAYPAUSE="Pause"
@@ -255,6 +310,7 @@ case "$(spotify-window-mappedStatus)" in
 		OUT_VISIBILITY_CHANGE="Show/Hide Spotify"
 		;;
 esac
+
 
 OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:15}"
 if [[ ${#SPOTIFY_CURRENT_TITLE} -gt 15 ]]
