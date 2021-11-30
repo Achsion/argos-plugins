@@ -1,4 +1,4 @@
-# Argos Plugins
+# Argos spotify plugin
 
 A simple argos plugin to control the linux spotify client with.  
 A couple of plugin behaviours can be controlled with [settings](./settings/spotify).
