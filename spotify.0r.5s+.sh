@@ -15,15 +15,30 @@ SETTING_PLAYLIST_URI=""
 SETTING_START_WINDOW="show"
 
 # eval spotify metadata variables placeholder
-SPOTIFY_CURRENT_TRACKNUMBER="---"
-SPOTIFY_CURRENT_TRACKID="---"
-SPOTIFY_CURRENT_TITLE="---"
-SPOTIFY_CURRENT_ARTIST="---"
-SPOTIFY_CURRENT_ALBUM="---"
-SPOTIFY_CURRENT_ALBUMARTIST="---"
+SPOTIFY_CURRENT_TRACKNUMBER="\-\-\-"
+SPOTIFY_CURRENT_TRACKID="\-\-\-"
+SPOTIFY_CURRENT_TITLE="\-\-\-"
+SPOTIFY_CURRENT_ARTIST="\-\-\-"
+SPOTIFY_CURRENT_ALBUM="\-\-\-"
+SPOTIFY_CURRENT_ALBUMARTIST="\-\-\-"
 
 
-# SETTINGS #############################################################################################################
+# Argos functions ######################################################################################################
+
+function is-argos-menu-open() {
+    if [[ -n "${ARGOS_MENU_OPEN}" ]]
+    then
+        if [ "${ARGOS_MENU_OPEN}" == 'true' ]
+        then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+
+# Settings #############################################################################################################
 
 if [ ! -d "${SETTINGS_DIRECTORY}" ]
 then
@@ -277,7 +292,7 @@ esac
 eval "$(spotify-eval)"
 
 
-OUT_PLAYPAUSE="---"
+OUT_PLAYPAUSE="\-\-\-"
 OUT_HEADER_ICON=":exclamation:"
 OUT_HEADER_COLOR="#ff0000"
 case "$(spotify-playbackStatus)" in
@@ -298,18 +313,23 @@ case "$(spotify-playbackStatus)" in
         ;;
 esac
 
-OUT_VISIBILITY_CHANGE="---"
-case "$(spotify-window-mappedStatus)" in
-    'IsViewable' )
-        OUT_VISIBILITY_CHANGE="Hide Spotify"
-        ;;
-    'IsUnMapped' )
-        OUT_VISIBILITY_CHANGE="Show Spotify"
-        ;;
-    * )
-        OUT_VISIBILITY_CHANGE="Show/Hide Spotify"
-        ;;
-esac
+OUT_VISIBILITY_CHANGE="Show/Hide Spotify"
+# Only execute more of the script when the argos dropdown is open
+# Hopefully this increases the performance a bit by not executing this expensive part
+if is-argos-menu-open
+then
+    case "$(spotify-window-mappedStatus)" in
+        'IsViewable' )
+            OUT_VISIBILITY_CHANGE="Hide Spotify"
+            ;;
+        'IsUnMapped' )
+            OUT_VISIBILITY_CHANGE="Show Spotify"
+            ;;
+        * )
+            OUT_VISIBILITY_CHANGE="Show/Hide Spotify"
+            ;;
+    esac
+fi
 
 # set music title displayed on panel button (max length of 15 chars)
 OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:15}"
@@ -321,6 +341,7 @@ fi
 
 # "Frontend" ###########################################################################################################
 
+# TODO: use spotify icon
 echo "${OUT_HEADER_ICON} ${OUT_TITLE} ${OUT_HEADER_ICON} | color=${OUT_HEADER_COLOR}"
 echo "---"
 
