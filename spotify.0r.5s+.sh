@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# needed utilities (yes, i also included standard unix utilities, just because)
+require dbus-send
+require grep
+require pgrep
+require pkill
+require sed
+require source
+require tr
+require xargs
+require xdotool
+
+
 # some default values
 SPOTIFY_DEST="org.mpris.MediaPlayer2.spotify"
 SPOTIFY_PATH="/org/mpris/MediaPlayer2"
@@ -10,7 +22,10 @@ WORKING_DIRECTORY="${0%/*}"
 SETTINGS_DIRECTORY="${WORKING_DIRECTORY}/settings"
 SETTINGS_FILE="${SETTINGS_DIRECTORY}/$(basename "${0}" | sed -E 's/\..*$//')"
 
-# eval setting variables playceholder
+# variables saved back into the config file
+SETTINGS_FILE_VARS=("SETTING_PLAYLIST_URI" "SETTING_START_WINDOW")
+
+# eval setting variables placeholder/default vars
 SETTING_PLAYLIST_URI=""
 SETTING_START_WINDOW="show"
 
@@ -50,18 +65,20 @@ then
 fi
 
 function apply-settings() {
-    # read settings from file
-    #TODO: maybe read setting variables with sed or smth else
-    while read -r LINE
-    do
-        # TODO: do i really want to use the settings file to eval the settings?
-        eval "${LINE}"
-    done < "${SETTINGS_FILE}"
+    # The variable `SETTINGS_FILE_VARS` *could* be used to only import the specific settings needed
+    # I won't add that due to two reasons:
+    #   1. I'm too lazy to do that. The time spent on implementing this isn't worth it
+    #   2. The config file will be overridden anyways
+    source "${SETTINGS_FILE}"
 }
 
-#TODO
-#function save-settings() {
-#}
+function save-settings() {
+    echo -n "" > "${SETTINGS_FILE}"
+
+    for i in "${!SETTINGS_FILE_VARS[@]}"; do
+        echo "${SETTINGS_FILE_VARS[i]}=\"${!SETTINGS_FILE_VARS[i]}\"" >> "${SETTINGS_FILE}";
+    done
+}
 
 apply-settings
 
@@ -252,6 +269,7 @@ esac
 # spotify isn't running
 if ! is-spotify-running
 then
+    # TODO: use spotify icon
     echo ":radio:"
     echo "---"
 
@@ -341,7 +359,6 @@ fi
 
 # "Frontend" ###########################################################################################################
 
-# TODO: use spotify icon
 echo "${OUT_HEADER_ICON} ${OUT_TITLE} ${OUT_HEADER_ICON} | color=${OUT_HEADER_COLOR}"
 echo "---"
 
