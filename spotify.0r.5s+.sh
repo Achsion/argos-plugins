@@ -80,8 +80,6 @@ function save-settings() {
     done
 }
 
-apply-settings
-
 
 # Spotify default window/process functions #############################################################################
 
@@ -258,6 +256,8 @@ function spotify-previous-force() {
 
 # Plugin functionality #################################################################################################
 
+apply-settings
+
 # check if spotify start button has been clicked
 case "${1}" in
     'start' )
@@ -350,10 +350,13 @@ then
 fi
 
 # set music title displayed on panel button (max length of 15 chars)
-OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:15}"
-if [[ ${#SPOTIFY_CURRENT_TITLE} -gt 15 ]]
+SPOTIFY_PROCESSED_TITLE="$(sed -E 's/ ?& ?/ and /g' <<< "${SPOTIFY_CURRENT_TITLE}")"
+SPOTIFY_PROCESSED_ARTIST="$(sed -E 's/ ?& ?/ and /g' <<< "${SPOTIFY_CURRENT_ARTIST}")"
+
+OUT_TITLE="${SPOTIFY_PROCESSED_TITLE:0:15}"
+if [[ ${#SPOTIFY_PROCESSED_TITLE} -gt 15 ]]
 then
-    OUT_TITLE="${SPOTIFY_CURRENT_TITLE:0:14}&#8230;"
+    OUT_TITLE="${SPOTIFY_PROCESSED_TITLE:0:14}&#8230;"
 fi
 
 
@@ -362,8 +365,8 @@ fi
 echo "${OUT_HEADER_ICON} ${OUT_TITLE} ${OUT_HEADER_ICON} | color=${OUT_HEADER_COLOR}"
 echo "---"
 
-echo "${SPOTIFY_CURRENT_TITLE} | length=25"
-echo "from \"${SPOTIFY_CURRENT_ARTIST:0:18}\""
+echo "${SPOTIFY_PROCESSED_TITLE} | length=25"
+echo "from \"${SPOTIFY_PROCESSED_ARTIST:0:18}\""
 
 echo "---"
 
