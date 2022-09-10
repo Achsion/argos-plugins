@@ -8,7 +8,6 @@ A couple of plugin behaviours can be controlled with a [settings/config file](./
 ## Requirements
 
 Well, a linux system with the spotify linux client installed (duh).  
-Additionally you want 
 
 ## Some important notes
 
